@@ -1,0 +1,65 @@
+name: Update and publish Aruba hotel data
+
+on:
+  schedule:
+    # Aruba is UTC-4 year-round: 13:00 UTC = 09:00 Aruba time.
+    - cron: "0 13 * * 5"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "public/**"
+      - "update_aruba_hotels.py"
+      - "requirements.txt"
+      - ".github/workflows/update-data.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install OCR and Python dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Update public data files
+        env:
+          ARUBA_OUTPUT_FILE: public/aruba_hotel_history.xlsx
+        run: python update_aruba_hotels.py
+
+      - name: Commit changed data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/aruba_hotel_history.xlsx public/aruba_hotel_history.csv public/latest.json
+          git diff --cached --quiet || git commit -m "Update Aruba hotel data"
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
