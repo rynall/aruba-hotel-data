@@ -1,0 +1,136 @@
+{
+  "updated": "2026-08-27",
+  "source_page": "https://tourismanalytics.com/aruba-statistics.html",
+  "source_image": "https://tourismanalytics.com/uploads/1/2/0/4/120443739/ahata-july-2026_orig.png",
+  "report": "Aruba Hotel Performance YTD 2026 July",
+  "monthly": [
+    {
+      "Year": 2025,
+      "MonthNumber": 1.0,
+      "Month": "Jan",
+      "Occupancy": 0.859,
+      "ADR": 482.67,
+      "RevPAR": 414.54
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 2.0,
+      "Month": "Feb",
+      "Occupancy": 0.864,
+      "ADR": 492.77,
+      "RevPAR": 425.63
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 3.0,
+      "Month": "Mar",
+      "Occupancy": 0.865,
+      "ADR": 459.08,
+      "RevPAR": 396.97
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 4.0,
+      "Month": "Apr",
+      "Occupancy": 0.78,
+      "ADR": 406.99,
+      "RevPAR": 317.59
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 5.0,
+      "Month": "May",
+      "Occupancy": 0.711,
+      "ADR": 349.59,
+      "RevPAR": 248.53
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 6.0,
+      "Month": "Jun",
+      "Occupancy": 0.723,
+      "ADR": 355.5,
+      "RevPAR": 257.05
+    },
+    {
+      "Year": 2025,
+      "MonthNumber": 7.0,
+      "Month": "Jul",
+      "Occupancy": 0.765,
+      "ADR": 379.7,
+      "RevPAR": 290.31
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 1.0,
+      "Month": "Jan",
+      "Occupancy": 0.814,
+      "ADR": 519.26,
+      "RevPAR": 422.91
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 2.0,
+      "Month": "Feb",
+      "Occupancy": 0.896,
+      "ADR": 542.95,
+      "RevPAR": 486.27
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 3.0,
+      "Month": "Mar",
+      "Occupancy": 0.864,
+      "ADR": 516.42,
+      "RevPAR": 446.25
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 4.0,
+      "Month": "Apr",
+      "Occupancy": 0.807,
+      "ADR": 454.22,
+      "RevPAR": 366.68
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 5.0,
+      "Month": "May",
+      "Occupancy": 0.714,
+      "ADR": 421.02,
+      "RevPAR": 300.43
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 6.0,
+      "Month": "Jun",
+      "Occupancy": 0.708,
+      "ADR": 400.03,
+      "RevPAR": 283.42
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 7.0,
+      "Month": "Jul",
+      "Occupancy": 0.756,
+      "ADR": 444.82,
+      "RevPAR": 336.18
+    }
+  ],
+  "ytd": [
+    {
+      "Year": 2026,
+      "Month": "YTD",
+      "Occupancy": 0.793,
+      "ADR": 474.2,
+      "RevPAR": 375.85
+    },
+    {
+      "Year": 2025,
+      "Month": "YTD",
+      "Occupancy": 0.794,
+      "ADR": 420.56,
+      "RevPAR": 333.83
+    }
+  ]
+}
