@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Public monthly Aruba hotel occupancy, ADR, and RevPAR data.">
+  <title>Aruba Hotel Performance Data</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202b; --muted:#607080; --blue:#0877ba; --pale:#eef6fa; --line:#d8e3e9; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; color:var(--ink); background:#f7fafc; }
+    header { background:linear-gradient(135deg,#075d91,#0797c9); color:white; padding:64px 22px 72px; }
+    header div, main { max-width:1050px; margin:auto; }
+    h1 { font-size:clamp(2rem,5vw,3.7rem); line-height:1.02; margin:0 0 14px; letter-spacing:-.04em; }
+    header p { max-width:650px; font-size:1.08rem; opacity:.9; margin:0; }
+    main { padding:0 22px 60px; }
+    .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:-36px; }
+    .card, section { background:white; border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 28px rgba(16,50,70,.07); }
+    .card { padding:22px; }
+    .label { color:var(--muted); font-size:.78rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+    .value { font-size:2rem; font-weight:750; margin-top:7px; letter-spacing:-.03em; }
+    .actions { display:flex; gap:12px; flex-wrap:wrap; margin:26px 0; }
+    a.button { color:white; background:var(--blue); padding:11px 16px; border-radius:10px; text-decoration:none; font-weight:700; }
+    a.secondary { color:var(--blue); background:var(--pale); }
+    section { overflow:hidden; }
+    section h2 { margin:0; padding:20px 22px; font-size:1.1rem; border-bottom:1px solid var(--line); }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:650px; }
+    th,td { padding:12px 18px; border-bottom:1px solid var(--line); text-align:right; }
+    th:first-child,td:first-child,th:nth-child(2),td:nth-child(2) { text-align:left; }
+    th { color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; background:#fbfdfe; }
+    footer { color:var(--muted); margin-top:18px; font-size:.86rem; }
+    footer a { color:var(--blue); }
+    @media(max-width:680px){ .cards{grid-template-columns:1fr} header{padding-top:46px}.value{font-size:1.7rem} }
+  </style>
+</head>
+<body>
+  <header><div>
+    <h1>Aruba Hotel<br>Performance Data</h1>
+    <p>Monthly occupancy, average daily rate, and revenue per available room, updated automatically from Tourism Analytics.</p>
+  </div></header>
+  <main>
+    <div class="cards">
+      <div class="card"><div class="label">YTD occupancy</div><div class="value" id="occupancy">—</div></div>
+      <div class="card"><div class="label">YTD ADR</div><div class="value" id="adr">—</div></div>
+      <div class="card"><div class="label">YTD RevPAR</div><div class="value" id="revpar">—</div></div>
+    </div>
+    <div class="actions">
+      <a class="button" href="aruba_hotel_history.xlsx">Download Excel</a>
+      <a class="button secondary" href="aruba_hotel_history.csv">Download CSV</a>
+    </div>
+    <section>
+      <h2>Monthly history</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Year</th><th>Month</th><th>Occupancy</th><th>ADR</th><th>RevPAR</th></tr></thead>
+        <tbody id="history"><tr><td colspan="5">Loading…</td></tr></tbody>
+      </table></div>
+    </section>
+    <footer>Last updated <span id="updated">—</span>. Source: <a href="https://tourismanalytics.com/aruba-statistics.html">Tourism Analytics / AHATA</a>.</footer>
+  </main>
+  <script>
+    const money = new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'});
+    const pct = value => `${(value*100).toFixed(1)}%`;
+    fetch('latest.json').then(r=>r.json()).then(data=>{
+      const current = [...data.ytd].sort((a,b)=>b.Year-a.Year)[0];
+      document.querySelector('#occupancy').textContent=pct(current.Occupancy);
+      document.querySelector('#adr').textContent=money.format(current.ADR);
+      document.querySelector('#revpar').textContent=money.format(current.RevPAR);
+      document.querySelector('#updated').textContent=data.updated;
+      document.querySelector('#history').innerHTML=[...data.monthly].sort((a,b)=>b.Year-a.Year||b.MonthNumber-a.MonthNumber).map(row=>
+        `<tr><td>${row.Year}</td><td>${row.Month}</td><td>${pct(row.Occupancy)}</td><td>${money.format(row.ADR)}</td><td>${money.format(row.RevPAR)}</td></tr>`
+      ).join('');
+    }).catch(()=>document.querySelector('#history').innerHTML='<tr><td colspan="5">Data unavailable.</td></tr>');
+  </script>
+</body>
+</html>
