@@ -65,15 +65,45 @@ def fetch_bytes(url: str) -> bytes:
 
 
 def latest_table_image() -> tuple[str, str]:
-    page_html = fetch_bytes(PAGE_URL)
-    soup = BeautifulSoup(page_html, "html.parser")
+    try:
+        page_html = fetch_bytes(PAGE_URL)
+        soup = BeautifulSoup(page_html, "html.parser")
+        for tag in soup.find_all("img"):
+            alt = tag.get("alt", "")
+            if re.search(r"Aruba.*Hotel Performance.*20\d{2}", alt, re.I):
+                src = tag.get("src") or tag.get("data-src")
+                if src:
+                    return urljoin(PAGE_URL, src), alt
+    except (requests.RequestException, RuntimeError):
+        pass
 
-    for tag in soup.find_all("img"):
-        alt = tag.get("alt", "")
-        if re.search(r"Aruba.*Hotel Performance.*20\d{2}", alt, re.I):
-            src = tag.get("src") or tag.get("data-src")
-            if src:
-                return urljoin(PAGE_URL, src), alt
+    # Some hosting networks receive a stripped anti-bot page. The publisher's
+    # monthly image filenames are predictable, so probe recent months directly.
+    today = date.today()
+    for offset in range(6):
+        month_index = today.year * 12 + today.month - 1 - offset
+        year, zero_based_month = divmod(month_index, 12)
+        month_number = zero_based_month + 1
+        month_name = [
+            "january", "february", "march", "april", "may", "june",
+            "july", "august", "september", "october", "november", "december",
+        ][month_number - 1]
+        candidate = (
+            "https://tourismanalytics.com/uploads/1/2/0/4/120443739/"
+            f"ahata-{month_name}-{year}_orig.png"
+        )
+        try:
+            content = fetch_bytes(candidate)
+            if content.startswith(b"\x89PNG\r\n\x1a\n"):
+                return candidate, f"Aruba Hotel Performance YTD {year} {month_name.title()}"
+        except RuntimeError:
+            continue
+
+    previous = Path("public/latest.json")
+    if previous.exists():
+        saved = json.loads(previous.read_text(encoding="utf-8"))
+        if saved.get("source_image") and saved.get("report"):
+            return saved["source_image"], saved["report"]
     raise RuntimeError("The current Aruba hotel-performance image was not found.")
 
 
