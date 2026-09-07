@@ -89,7 +89,7 @@ def latest_table_image() -> tuple[str, str]:
             "july", "august", "september", "october", "november", "december",
         ][month_number - 1]
         candidate = (
-            "https://tourismanalytics.com/uploads/1/2/0/4/120443739/"
+            "https://tourismanalytics.weebly.com/uploads/1/2/0/4/120443739/"
             f"ahata-{month_name}-{year}_orig.png"
         )
         try:
@@ -149,7 +149,17 @@ def main() -> None:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     image_url, report_name = latest_table_image()
     print(f"Downloading {image_url}")
-    image = Image.open(io.BytesIO(fetch_bytes(image_url))).convert("RGB")
+    image_content = fetch_bytes(image_url)
+    try:
+        image = Image.open(io.BytesIO(image_content)).convert("RGB")
+    except Image.UnidentifiedImageError:
+        asset_url = image_url.replace(
+            "https://tourismanalytics.com/uploads/",
+            "https://tourismanalytics.weebly.com/uploads/",
+        )
+        image_content = fetch_bytes(asset_url)
+        image = Image.open(io.BytesIO(image_content)).convert("RGB")
+        image_url = asset_url
 
     year_match = re.search(r"20\d{2}", report_name)
     report_year = int(year_match.group()) if year_match else date.today().year
