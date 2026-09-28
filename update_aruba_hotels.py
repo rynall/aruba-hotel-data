@@ -15,6 +15,7 @@ from urllib.parse import urljoin
 import pandas as pd
 import pytesseract
 import requests
+import numpy as np
 from bs4 import BeautifulSoup
 from PIL import Image, ImageOps
 
@@ -88,16 +89,19 @@ def latest_table_image() -> tuple[str, str]:
             "january", "february", "march", "april", "may", "june",
             "july", "august", "september", "october", "november", "december",
         ][month_number - 1]
-        candidate = (
-            "https://tourismanalytics.weebly.com/uploads/1/2/0/4/120443739/"
-            f"ahata-{month_name}-{year}_orig.png"
-        )
-        try:
-            content = fetch_bytes(candidate)
-            if content.startswith(b"\x89PNG\r\n\x1a\n"):
-                return candidate, f"Aruba Hotel Performance YTD {year} {month_name.title()}"
-        except RuntimeError:
-            continue
+        for year_label in (str(year), str(year)[-2:]):
+            candidate = (
+                "https://tourismanalytics.weebly.com/uploads/1/2/0/4/120443739/"
+                f"ahata-{month_name}-{year_label}_orig.png"
+            )
+            try:
+                content = fetch_bytes(candidate)
+                if content.startswith(b"\x89PNG\r\n\x1a\n"):
+                    return candidate, (
+                        f"Aruba Hotel Performance YTD {year} {month_name.title()}"
+                    )
+            except RuntimeError:
+                continue
 
     previous = Path("public/latest.json")
     if previous.exists():
@@ -110,21 +114,37 @@ def latest_table_image() -> tuple[str, str]:
 def parse_metric(
     image: Image.Image,
     metric: str,
-    data_top: float,
+    row_boundaries: list[int],
     row_labels: list[str],
     percentage: bool = False,
 ) -> pd.DataFrame:
     """Read cells individually so the table's grid does not confuse OCR."""
-    scale = image.width / 894.0
-    row_height = 43.45 * scale
-    columns = {1: (250 * scale, 460 * scale), 2: (466 * scale, 675 * scale)}
+    gray = np.asarray(ImageOps.grayscale(image))
+    y_start, y_end = row_boundaries[0], row_boundaries[-1]
+    dark_counts = (gray[y_start:y_end + 1, :] < 80).sum(axis=0)
+    dark_x = np.where(dark_counts > (y_end - y_start) * 0.65)[0]
+    groups: list[list[int]] = []
+    for x in dark_x:
+        if not groups or x > groups[-1][-1] + 1:
+            groups.append([int(x)])
+        else:
+            groups[-1].append(int(x))
+    vertical_lines = [round(sum(group) / len(group)) for group in groups]
+    if len(vertical_lines) < 5:
+        raise RuntimeError(
+            f"Could not detect the table columns for {metric}: {vertical_lines}"
+        )
+    columns = {
+        1: (vertical_lines[1], vertical_lines[2]),
+        2: (vertical_lines[2], vertical_lines[3]),
+    }
     rows = []
 
     for row_number, month in enumerate(row_labels):
-        y1 = data_top + row_number * row_height + 3 * scale
-        y2 = data_top + (row_number + 1) * row_height - 3 * scale
+        y1 = row_boundaries[row_number] + 3
+        y2 = row_boundaries[row_number + 1] - 3
         for year_column, (x1, x2) in columns.items():
-            cell = image.crop((int(x1), int(y1), int(x2), int(y2)))
+            cell = image.crop((int(x1) + 3, int(y1), int(x2) - 3, int(y2)))
             cell = ImageOps.grayscale(
                 cell.resize((cell.width * 3, cell.height * 3))
             )
@@ -143,6 +163,23 @@ def parse_metric(
 
     result = pd.DataFrame(rows)
     return result.drop_duplicates(["Month", "YearColumn"])
+
+
+def horizontal_grid_lines(image: Image.Image) -> list[int]:
+    """Locate full-width horizontal table borders in either image template."""
+    gray = np.asarray(ImageOps.grayscale(image))
+    dark_counts = (gray < 80).sum(axis=1)
+    dark_y = np.where(dark_counts > image.width * 0.70)[0]
+    groups: list[list[int]] = []
+    for y in dark_y:
+        if not groups or y > groups[-1][-1] + 1:
+            groups.append([int(y)])
+        else:
+            groups[-1].append(int(y))
+    lines = [round(sum(group) / len(group)) for group in groups]
+    if len(lines) < 20:
+        raise RuntimeError(f"Could not detect enough table rows: {lines}")
+    return lines
 
 
 def main() -> None:
@@ -167,26 +204,34 @@ def main() -> None:
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December",
     ]
+    # The page's alt text can lag behind the image itself (August 2026 was
+    # still labelled July), so treat the asset filename as authoritative.
     report_month_match = re.search(
-        rf"\b({'|'.join(full_months)})\b", report_name, re.I
-    )
+        rf"ahata-({'|'.join(full_months)})-", image_url, re.I
+    ) or re.search(rf"\b({'|'.join(full_months)})\b", report_name, re.I)
     if not report_month_match:
         raise RuntimeError(f"Could not determine the report month from {report_name!r}.")
     report_month_number = [m.lower() for m in full_months].index(
-        report_month_match.group().lower()
+        report_month_match.group(1).lower()
     ) + 1
+    report_name = (
+        f"Aruba Hotel Performance YTD {report_year} "
+        f"{full_months[report_month_number - 1]}"
+    )
     row_labels = MONTHS[:report_month_number] + ["YTD"]
 
-    scale = image.width / 894.0
-    row_height = 43.45 * scale
-    block_offset = (len(row_labels) + 3) * row_height
-    occupancy_top = 143 * scale
-    adr_top = occupancy_top + block_offset
-    revpar_top = adr_top + block_offset
+    grid_lines = horizontal_grid_lines(image)
+    rows_per_metric = len(row_labels)
+    occupancy_index = 3
+    adr_index = occupancy_index + rows_per_metric + 3
+    revpar_index = adr_index + rows_per_metric + 3
+    occupancy_rows = grid_lines[occupancy_index:occupancy_index + rows_per_metric + 1]
+    adr_rows = grid_lines[adr_index:adr_index + rows_per_metric + 1]
+    revpar_rows = grid_lines[revpar_index:revpar_index + rows_per_metric + 1]
 
-    occupancy = parse_metric(image, "Occupancy", occupancy_top, row_labels, True)
-    adr = parse_metric(image, "ADR", adr_top, row_labels)
-    revpar = parse_metric(image, "RevPAR", revpar_top, row_labels)
+    occupancy = parse_metric(image, "Occupancy", occupancy_rows, row_labels, True)
+    adr = parse_metric(image, "ADR", adr_rows, row_labels)
+    revpar = parse_metric(image, "RevPAR", revpar_rows, row_labels)
 
     data = occupancy.merge(adr, on=["Month", "YearColumn"], how="outer")
     data = data.merge(revpar, on=["Month", "YearColumn"], how="outer")
