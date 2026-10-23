@@ -1,8 +1,8 @@
 {
-  "updated": "2026-10-18",
+  "updated": "2026-10-23",
   "source_page": "https://tourismanalytics.com/aruba-statistics.html",
-  "source_image": "https://tourismanalytics.com/uploads/1/2/0/4/120443739/ahata-august-26_orig.png",
-  "report": "Aruba Hotel Performance YTD 2026 August",
+  "source_image": "https://tourismanalytics.com/uploads/1/2/0/4/120443739/aruba-hotel-opy-sep-26_orig.png",
+  "report": "Aruba Hotel Performance YTD 2026 September",
   "monthly": [
     {
       "Year": 2025,
@@ -69,6 +69,14 @@
       "RevPAR": 271.96
     },
     {
+      "Year": 2025,
+      "MonthNumber": 9.0,
+      "Month": "Sep",
+      "Occupancy": 0.633,
+      "ADR": 335.9,
+      "RevPAR": 212.69
+    },
+    {
       "Year": 2026,
       "MonthNumber": 1.0,
       "Month": "Jan",
@@ -131,22 +139,30 @@
       "Occupancy": 0.759,
       "ADR": 410.97,
       "RevPAR": 311.84
+    },
+    {
+      "Year": 2026,
+      "MonthNumber": 9.0,
+      "Month": "Sep",
+      "Occupancy": 0.734,
+      "ADR": 357.31,
+      "RevPAR": 262.43
     }
   ],
   "ytd": [
     {
       "Year": 2026,
       "Month": "YTD",
-      "Occupancy": 0.788,
-      "ADR": 465.93,
-      "RevPAR": 367.34
+      "Occupancy": 0.782,
+      "ADR": 454.61,
+      "RevPAR": 355.69
     },
     {
       "Year": 2025,
       "Month": "YTD",
-      "Occupancy": 0.786,
-      "ADR": 413.96,
-      "RevPAR": 325.47
+      "Occupancy": 0.769,
+      "ADR": 406.58,
+      "RevPAR": 312.52
     }
   ]
 }
